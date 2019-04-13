@@ -8,13 +8,18 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"hash"
 	"io"
+	"strconv"
 	"strings"
+
+	"golang.org/x/crypto/pbkdf2"
 )
 
 // Common errors.
 var (
 	ErrHashMissmatch = errors.New("Hash and data does not match")
+	ErrInvalidKey    = errors.New("Invalid key")
 )
 
 // Hmac computes a hashed message authentication key.
@@ -44,6 +49,97 @@ func GenSalt(length int) (string, error) {
 type Hasher interface {
 	Hash(plaintext, salt string) (string, error)
 	Verify(plaintext, salt, hash string) error
+}
+
+// PBKDF2Hasher implementation of Hasher using SHA-512.
+type PBKDF2Hasher struct {
+	pepper     []byte
+	iterations int
+	keyLen     int
+	hashFn     func() hash.Hash
+}
+
+// Hash hashes a plaintext password and salt.
+func (h *PBKDF2Hasher) Hash(plaintext, salt string) (string, error) {
+	key, err := h.deriveKey(plaintext, salt, h.iterations, h.keyLen)
+	if err != nil {
+		return "", err
+	}
+
+	return key.String(), nil
+}
+
+// Verify verifies that a plaintext string and forms a hash.
+func (h *PBKDF2Hasher) Verify(plaintext, salt, hash string) error {
+	key, err := parsePbkdf2Key(hash)
+	if err != nil {
+		return err
+	}
+
+	candidate, err := h.deriveKey(plaintext, salt, key.iterations, key.keyLen)
+	if err != nil {
+		return err
+	}
+
+	if candidate.hash != key.hash {
+		return ErrHashMissmatch
+	}
+
+	return nil
+}
+
+func (h *PBKDF2Hasher) deriveKey(plaintext, salt string, iter, kLen int) (pbkdf2Key, error) {
+	mac, err := Hmac(joinToBytes(plaintext, salt), h.pepper)
+	if err != nil {
+		return pbkdf2Key{}, err
+	}
+
+	macBytes := []byte(mac)
+	saltBytes := []byte(salt)
+	key := pbkdf2.Key(macBytes, saltBytes, iter, kLen, h.hashFn)
+
+	return pbkdf2Key{
+		iterations: iter,
+		keyLen:     kLen,
+		hash:       hex.EncodeToString(key),
+	}, nil
+}
+
+type pbkdf2Key struct {
+	iterations int
+	keyLen     int
+	hash       string
+}
+
+func (k pbkdf2Key) String() string {
+	return fmt.Sprintf("PBKDF2$%d$%d$%s", k.iterations, k.keyLen, k.hash)
+}
+
+func parsePbkdf2Key(str string) (pbkdf2Key, error) {
+	c := strings.Split(str, "$")
+	if len(c) != 4 {
+		return pbkdf2Key{}, ErrInvalidKey
+	}
+
+	if c[0] != "PBKDF2" {
+		return pbkdf2Key{}, ErrInvalidKey
+	}
+
+	iter, err := strconv.Atoi(c[1])
+	if err != nil {
+		return pbkdf2Key{}, ErrInvalidKey
+	}
+
+	keyLen, err := strconv.Atoi(c[2])
+	if err != nil {
+		return pbkdf2Key{}, ErrInvalidKey
+	}
+
+	return pbkdf2Key{
+		iterations: iter,
+		keyLen:     keyLen,
+		hash:       c[3],
+	}, nil
 }
 
 // Sha512Hasher implementation of Hasher using SHA-512.
