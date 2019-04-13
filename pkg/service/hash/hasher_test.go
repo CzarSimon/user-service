@@ -63,6 +63,163 @@ func TestGenSalt(t *testing.T) {
 	}
 }
 
+func TestScrypHasherHash(t *testing.T) {
+	var hasher Hasher = &ScryptHasher{
+		pepper: []byte("secret-pepper"),
+		cost:   1024,
+		p:      1,
+		r:      8,
+		keyLen: 64,
+	}
+	fullCostHasher := NewHasher("secret-pepper")
+
+	type args struct {
+		plaintext string
+		salt      string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "Happy path",
+			args: args{
+				plaintext: "my-password",
+				salt:      "random-salt",
+			},
+			want:    "SCRYPT$1024$1$8$64$65fe22a1e99bdf22bab227fca3c06be019e5ee9aee6f462d7c07626dca7bf41c4ee60cc15d575471c3a407f16b8bf2fb096a1a3a336bdafcc98accdb6e11d626",
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := hasher.Hash(tt.args.plaintext, tt.args.salt)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ScryptHasher.Hash() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("ScryptHasher.Hash() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+	hash1, err := hasher.Hash("other-secret-password", "long-random-salt")
+	if err != nil {
+		t.Errorf("ScryptHasher.Hash() unexpected error = %v", err)
+	}
+
+	hash2, err := fullCostHasher.Hash("other-secret-password", "long-random-salt")
+	if err != nil {
+		t.Errorf("ScryptHasher.Hash() unexpected error = %v", err)
+	}
+
+	if hash1 == hash2 {
+		t.Errorf("ScryptHasher.Hash() generated same hash with different costs 1024 = %s, 32768 = %s", hash1, hash2)
+	}
+}
+
+func TestScryptHasherVerify(t *testing.T) {
+	hasher := &ScryptHasher{
+		pepper: []byte("secret-pepper"),
+		cost:   1024,
+		p:      1,
+		r:      8,
+		keyLen: 64,
+	}
+	wrongPepperHasher := &ScryptHasher{
+		pepper: []byte("wrong-secret-pepper"),
+		cost:   1024,
+		p:      1,
+		r:      8,
+		keyLen: 64,
+	}
+	fullCostHasher := NewHasher("secret-pepper")
+
+	type args struct {
+		plaintext string
+		salt      string
+		hash      string
+	}
+	tests := []struct {
+		name    string
+		hasher  Hasher
+		args    args
+		wantErr error
+	}{
+		{
+			name:   "happy-path-same-params",
+			hasher: hasher,
+			args: args{
+				plaintext: "my-password",
+				salt:      "random-salt",
+				hash:      "SCRYPT$1024$1$8$64$65fe22a1e99bdf22bab227fca3c06be019e5ee9aee6f462d7c07626dca7bf41c4ee60cc15d575471c3a407f16b8bf2fb096a1a3a336bdafcc98accdb6e11d626",
+			},
+			wantErr: nil,
+		},
+		{
+			name:   "happy-path-full-cost-hasher",
+			hasher: fullCostHasher,
+			args: args{
+				plaintext: "my-password",
+				salt:      "random-salt",
+				hash:      "SCRYPT$1024$1$8$64$65fe22a1e99bdf22bab227fca3c06be019e5ee9aee6f462d7c07626dca7bf41c4ee60cc15d575471c3a407f16b8bf2fb096a1a3a336bdafcc98accdb6e11d626",
+			},
+			wantErr: nil,
+		},
+		{
+			name:   "sad-wrong-hash",
+			hasher: hasher,
+			args: args{
+				plaintext: "my-password",
+				salt:      "random-salt",
+				hash:      "SCRYPT$1024$1$8$64$05fe22a1e99bdf22bab227fca3c06be019e5ee9aee6f462d7c07626dca7bf41c4ee60cc15d575471c3a407f16b8bf2fb096a1a3a336bdafcc98accdb6e11d626",
+			},
+			wantErr: ErrHashMissmatch,
+		},
+		{
+			name:   "sad-wrong-salt",
+			hasher: hasher,
+			args: args{
+				plaintext: "my-password",
+				salt:      "random-salt-wrong",
+				hash:      "SCRYPT$1024$1$8$64$65fe22a1e99bdf22bab227fca3c06be019e5ee9aee6f462d7c07626dca7bf41c4ee60cc15d575471c3a407f16b8bf2fb096a1a3a336bdafcc98accdb6e11d626",
+			},
+			wantErr: ErrHashMissmatch,
+		},
+		{
+			name:   "sad-wrong-password",
+			hasher: hasher,
+			args: args{
+				plaintext: "my-password-wrong",
+				salt:      "random-salt",
+				hash:      "SCRYPT$1024$1$8$64$65fe22a1e99bdf22bab227fca3c06be019e5ee9aee6f462d7c07626dca7bf41c4ee60cc15d575471c3a407f16b8bf2fb096a1a3a336bdafcc98accdb6e11d626",
+			},
+			wantErr: ErrHashMissmatch,
+		},
+		{
+			name:   "sad-wrong-pepper",
+			hasher: wrongPepperHasher,
+			args: args{
+				plaintext: "my-password",
+				salt:      "random-salt",
+				hash:      "SCRYPT$1024$1$8$64$65fe22a1e99bdf22bab227fca3c06be019e5ee9aee6f462d7c07626dca7bf41c4ee60cc15d575471c3a407f16b8bf2fb096a1a3a336bdafcc98accdb6e11d626",
+			},
+			wantErr: ErrHashMissmatch,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.hasher.Verify(tt.args.plaintext, tt.args.salt, tt.args.hash)
+			if err != tt.wantErr {
+				t.Errorf("ScryptHasher.Verify() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
 func TestPBKDF2HasherHash(t *testing.T) {
 	var hasher Hasher = &PBKDF2Hasher{
 		pepper:     []byte("secret-pepper"),
