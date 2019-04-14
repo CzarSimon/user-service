@@ -1,0 +1,12 @@
+github.com/CzarSimon/user-service/pkg/id v0.0.0-20190410202449-fff9f20481f6 h1:Y66cFPTjwuM4rTYjNVe/Mv7wz9d42hHR/6SzltBuXzk=
+github.com/CzarSimon/user-service/pkg/id v0.0.0-20190410202449-fff9f20481f6/go.mod h1:Aq9+jihejP81+uiBXB3oAyFcE296GH6oVHyLFOS7Rz8=
+github.com/CzarSimon/user-service/pkg/models v0.0.0-20190414160731-0c1651c4764e h1:4gmTOZfh8shdwVCgFcbFWcQfGebO/rSU9PzRdBE+E9A=
+github.com/CzarSimon/user-service/pkg/models v0.0.0-20190414160731-0c1651c4764e/go.mod h1:muvR+DSvy/idZSLVX7yiZxZqO/tKh+in/a/sUZmV9nE=
+github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
+github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
+github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
+github.com/mimir-news/pkg v0.0.0-20190121200947-8a9f96ba3037 h1:l3l4nCMbLvS6CF+gnADzS2nn/d8tnuowrmsMWUWEz6I=
+github.com/mimir-news/pkg v0.0.0-20190121200947-8a9f96ba3037/go.mod h1:56VnezYq4JPmYiVRE/FKnjIFgCvIi4iYK3qX5As1zXM=
+github.com/satori/go.uuid v1.2.0 h1:0uYX9dsZ2yD7q2RtLRtPSdGDWzjeM3TbMJP9utgA0ww=
+github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
+gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=

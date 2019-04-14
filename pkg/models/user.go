@@ -18,9 +18,9 @@ type User struct {
 	ID                string    `json:"id,omitempty"`
 	Email             string    `json:"email,omitempty"`
 	Surname           string    `json:"surname,omitempty"`
-	MiddleAndLastName string    `json:"middle_and_last_name,omitempty"`
+	MiddleAndLastName string    `json:"middleAndLastName,omitempty"`
 	Role              string    `json:"role,omitempty"`
-	CreatedAt         time.Time `json:"created_at,omitempty"`
+	CreatedAt         time.Time `json:"createdAt,omitempty"`
 }
 
 // NewUser creates a new User.
@@ -41,7 +41,7 @@ type SignupRequest struct {
 	Password          string `json:"password,omitempty"`
 	RepeatPassword    string `json:"repeatPassword,omitempty"`
 	Surname           string `json:"surname,omitempty"`
-	MiddleAndLastName string `json:"middle_and_last_name,omitempty"`
+	MiddleAndLastName string `json:"middleAndLastName,omitempty"`
 }
 
 // User creates a new user from a signup request.
@@ -58,7 +58,7 @@ type LoginRequest struct {
 // LoginResponse response for login and signup requests.
 type LoginResponse struct {
 	Token        string `json:"token,omitempty"`
-	RefreshToken string `json:"refresh_token,omitempty"`
+	RefreshToken string `json:"refreshToken,omitempty"`
 	User         User   `json:"user,omitempty"`
 }
 
@@ -67,6 +67,22 @@ type ChangePasswordRequest struct {
 	Email       string `json:"email,omitempty"`
 	OldPassword string `json:"oldPassword,omitempty"`
 	NewPassword string `json:"newPassword,omitempty"`
+}
+
+// Credentials authentication information.
+type Credentials struct {
+	UserID       string
+	PasswordHash string
+	Salt         string
+}
+
+// Session information about a user session.
+type Session struct {
+	ID           string
+	UserID       string
+	RefreshToken string
+	Active       bool
+	CreatedAt    time.Time
 }
 
 func now() time.Time {
