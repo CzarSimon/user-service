@@ -26,7 +26,7 @@ func (svc *userSvc) SignUp(req models.SignupRequest) (models.LoginResponse, erro
 		return models.LoginResponse{}, errUserAlreadyExists()
 	}
 
-	user := models.NewUser(req.Email, req.Surname, req.MiddleAndLastName, models.UserRole)
+	user := req.User()
 	err = svc.userRepo.Save(user)
 	if err != nil {
 		return models.LoginResponse{}, httputil.NewInternalServerError("Failed to save user")

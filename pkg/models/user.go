@@ -15,16 +15,17 @@ const (
 
 // User holds data about an application user.
 type User struct {
-	ID                string    `json:"id,omitempty"`
-	Email             string    `json:"email,omitempty"`
-	Surname           string    `json:"surname,omitempty"`
-	MiddleAndLastName string    `json:"middleAndLastName,omitempty"`
-	Role              string    `json:"role,omitempty"`
-	CreatedAt         time.Time `json:"createdAt,omitempty"`
+	ID                string      `json:"id,omitempty"`
+	Email             string      `json:"email,omitempty"`
+	Surname           string      `json:"surname,omitempty"`
+	MiddleAndLastName string      `json:"middleAndLastName,omitempty"`
+	Role              string      `json:"role,omitempty"`
+	CreatedAt         time.Time   `json:"createdAt,omitempty"`
+	Credentials       Credentials `json:"-"`
 }
 
 // NewUser creates a new User.
-func NewUser(email, surname, lastName, role string) User {
+func NewUser(email, surname, lastName, role string, credentials Credentials) User {
 	return User{
 		ID:                id.New(),
 		Email:             email,
@@ -32,6 +33,7 @@ func NewUser(email, surname, lastName, role string) User {
 		MiddleAndLastName: lastName,
 		Role:              role,
 		CreatedAt:         now(),
+		Credentials:       credentials,
 	}
 }
 
@@ -45,8 +47,8 @@ type SignupRequest struct {
 }
 
 // User creates a new user from a signup request.
-func (s *SignupRequest) User() User {
-	return NewUser(s.Email, s.Surname, s.MiddleAndLastName, UserRole)
+func (s *SignupRequest) User(credentials Credentials) User {
+	return NewUser(s.Email, s.Surname, s.MiddleAndLastName, UserRole, credentials)
 }
 
 // LoginRequest request body for a user login.
@@ -74,15 +76,6 @@ type Credentials struct {
 	UserID       string
 	PasswordHash string
 	Salt         string
-}
-
-// Session information about a user session.
-type Session struct {
-	ID           string
-	UserID       string
-	RefreshToken string
-	Active       bool
-	CreatedAt    time.Time
 }
 
 func now() time.Time {
