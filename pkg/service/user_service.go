@@ -15,9 +15,10 @@ type UserService interface {
 }
 
 type userSvc struct {
-	hasher   auth.Hasher
-	issuer   auth.Issuer
-	userRepo repository.UserRepository
+	hasher          auth.Hasher
+	issuer          auth.Issuer
+	userRepo        repository.UserRepository
+	passwordChecker passwordChecker
 }
 
 func (svc *userSvc) SignUp(req models.SignupRequest) (models.LoginResponse, error) {
@@ -26,13 +27,27 @@ func (svc *userSvc) SignUp(req models.SignupRequest) (models.LoginResponse, erro
 		return models.LoginResponse{}, errUserAlreadyExists()
 	}
 
-	user := req.User()
+	credentials, err := svc.createCredentials(req)
+	if err != nil {
+		return models.LoginResponse{}, err
+	}
+
+	user := req.User(credentials)
 	err = svc.userRepo.Save(user)
 	if err != nil {
 		return models.LoginResponse{}, httputil.NewInternalServerError("Failed to save user")
 	}
 
 	return svc.createLoginResponse(user)
+}
+
+func (svc *userSvc) createCredentials(req models.SignupRequest) (models.Credentials, error) {
+	err := svc.passwordChecker.check(req.Password, req.RepeatPassword)
+	if err != nil {
+		return models.Credentials{}, err
+	}
+
+	return models.Credentials{}, nil
 }
 
 func (svc *userSvc) createLoginResponse(user models.User) (models.LoginResponse, error) {

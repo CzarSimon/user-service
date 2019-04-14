@@ -24,6 +24,10 @@ var verifier = auth.NewJWTVerifier(auth.JWTCredentials{
 }, time.Minute)
 
 func Test_userSvc_SignUp(t *testing.T) {
+	okRepo := &repotest.MockUserRepo{
+		FindByEmailErr: repository.ErrNoSuchUser,
+	}
+
 	type fields struct {
 		userRepo *repotest.MockUserRepo
 	}
@@ -44,9 +48,7 @@ func Test_userSvc_SignUp(t *testing.T) {
 		{
 			name: "happy-path",
 			fields: fields{
-				userRepo: &repotest.MockUserRepo{
-					FindByEmailErr: repository.ErrNoSuchUser,
-				},
+				userRepo: okRepo,
 			},
 			args: args{
 				req: models.SignupRequest{
@@ -88,13 +90,54 @@ func Test_userSvc_SignUp(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "sad-path-too-short-password",
+			fields: fields{
+				userRepo: okRepo,
+			},
+			args: args{
+				req: models.SignupRequest{
+					Email:             "mail@mail.com",
+					Password:          "short",
+					RepeatPassword:    "short",
+					Surname:           "Tester",
+					MiddleAndLastName: "McTest",
+				},
+			},
+			want: want{
+				user:                models.User{},
+				saveUserInvocations: 0,
+			},
+			wantErr: true,
+		},
+		{
+			name: "sad-path-password-missmatch",
+			fields: fields{
+				userRepo: okRepo,
+			},
+			args: args{
+				req: models.SignupRequest{
+					Email:             "mail@mail.com",
+					Password:          "secret-drowssap",
+					RepeatPassword:    "secret+drowssap",
+					Surname:           "Tester",
+					MiddleAndLastName: "McTest",
+				},
+			},
+			want: want{
+				user:                models.User{},
+				saveUserInvocations: 0,
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			svc := &userSvc{
-				hasher:   hasher,
-				issuer:   issuer,
-				userRepo: tt.fields.userRepo,
+				hasher:          hasher,
+				issuer:          issuer,
+				userRepo:        tt.fields.userRepo,
+				passwordChecker: &defaultChecker{minLength: 8},
 			}
 			got, err := svc.SignUp(tt.args.req)
 			if (err != nil) != tt.wantErr {
