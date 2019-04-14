@@ -1,4 +1,4 @@
-module github.com/CzarSimon/user-service/pkg/service/hash
+module github.com/CzarSimon/user-service/pkg/auth
 
 go 1.12
 
