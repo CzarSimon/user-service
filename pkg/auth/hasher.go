@@ -1,4 +1,4 @@
-package hash
+package auth
 
 import (
 	"crypto/hmac"
