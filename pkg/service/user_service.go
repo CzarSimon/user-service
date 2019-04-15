@@ -19,6 +19,7 @@ type userSvc struct {
 	issuer          auth.Issuer
 	userRepo        repository.UserRepository
 	passwordChecker passwordChecker
+	saltLength      int
 }
 
 func (svc *userSvc) SignUp(req models.SignupRequest) (models.LoginResponse, error) {
@@ -47,7 +48,22 @@ func (svc *userSvc) createCredentials(req models.SignupRequest) (models.Credenti
 		return models.Credentials{}, err
 	}
 
-	return models.Credentials{}, nil
+	salt, err := auth.GenSalt(svc.saltLength)
+	if err != nil {
+		// log error
+		return models.Credentials{}, httputil.NewInternalServerError("Failed to generate salt")
+	}
+
+	hash, err := svc.hasher.Hash(req.Password, salt)
+	if err != nil {
+		// log error
+		return models.Credentials{}, httputil.NewInternalServerError("Failed to hash password")
+	}
+
+	return models.Credentials{
+		PasswordHash: hash,
+		Salt:         salt,
+	}, nil
 }
 
 func (svc *userSvc) createLoginResponse(user models.User) (models.LoginResponse, error) {

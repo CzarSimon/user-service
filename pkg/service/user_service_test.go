@@ -138,6 +138,7 @@ func Test_userSvc_SignUp(t *testing.T) {
 				issuer:          issuer,
 				userRepo:        tt.fields.userRepo,
 				passwordChecker: &defaultChecker{minLength: 8},
+				saltLength:      25,
 			}
 			got, err := svc.SignUp(tt.args.req)
 			if (err != nil) != tt.wantErr {
@@ -156,6 +157,8 @@ func Test_userSvc_SignUp(t *testing.T) {
 			assert.Equal(t, tt.want.user.MiddleAndLastName, got.User.MiddleAndLastName)
 			assert.Equal(t, tt.want.user.Role, got.User.Role)
 			assert.Equal(t, tt.want.saveUserInvocations, tt.fields.userRepo.SaveInvocations)
+			assert.NotEqual(t, "", got.User.Credentials.PasswordHash)
+			assert.NotEqual(t, "", got.User.Credentials.Salt)
 
 			token, err := verifier.Verify(got.Token)
 			assert.NoError(t, err)
