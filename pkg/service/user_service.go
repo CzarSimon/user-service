@@ -12,6 +12,8 @@ import (
 // UserService service responsible for business logic related to users.
 type UserService interface {
 	SignUp(req models.SignupRequest) (models.LoginResponse, error)
+	Login(req models.LoginRequest) (models.LoginResponse, error)
+	Find(id string) (models.User, error)
 }
 
 type userSvc struct {
@@ -66,6 +68,31 @@ func (svc *userSvc) createCredentials(req models.SignupRequest) (models.Credenti
 	}, nil
 }
 
+func (svc *userSvc) Login(req models.LoginRequest) (models.LoginResponse, error) {
+	user, err := svc.userRepo.FindByEmail(req.Email)
+	if err == repository.ErrNoSuchUser {
+		return models.LoginResponse{}, errNoSuchUser()
+	} else if err != nil {
+		return models.LoginResponse{}, httputil.NewInternalServerError("Failed to get user")
+	}
+
+	err = svc.hasher.Verify(req.Password, user.Credentials.Salt, user.Credentials.PasswordHash)
+	if err != nil {
+		return models.LoginResponse{}, errInvalidCredentials()
+	}
+
+	return svc.createLoginResponse(user)
+}
+
+func (svc *userSvc) Find(id string) (models.User, error) {
+	user, err := svc.userRepo.Find(id)
+	if err != nil {
+		return models.User{}, httputil.NewError("No such user", http.StatusNotFound)
+	}
+
+	return user, nil
+}
+
 func (svc *userSvc) createLoginResponse(user models.User) (models.LoginResponse, error) {
 	token, err := svc.issuer.Issue(user.ID, user.Role)
 	if err != nil {
@@ -80,4 +107,12 @@ func (svc *userSvc) createLoginResponse(user models.User) (models.LoginResponse,
 
 func errUserAlreadyExists() error {
 	return httputil.NewError("User already exists", http.StatusConflict)
+}
+
+func errNoSuchUser() error {
+	return httputil.NewError("No such user", http.StatusUnauthorized)
+}
+
+func errInvalidCredentials() error {
+	return httputil.NewError("Email and password does not match", http.StatusUnauthorized)
 }
