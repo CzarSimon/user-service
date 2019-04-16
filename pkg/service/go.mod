@@ -10,4 +10,5 @@ require (
 	github.com/CzarSimon/user-service/pkg/repository v0.0.0-20190414213512-6f2a7ae6afb1
 	github.com/CzarSimon/user-service/pkg/repository/repotest v0.0.0-20190414213512-6f2a7ae6afb1
 	github.com/stretchr/testify v1.3.0
+	go.uber.org/zap v1.9.1
 )

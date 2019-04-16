@@ -1,13 +1,26 @@
 package service
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/CzarSimon/user-service/pkg/auth"
 	"github.com/CzarSimon/user-service/pkg/httputil"
 	"github.com/CzarSimon/user-service/pkg/models"
 	"github.com/CzarSimon/user-service/pkg/repository"
+	"go.uber.org/zap"
 )
+
+var logger *zap.SugaredLogger
+
+func init() {
+	l, err := zap.NewProduction()
+	if err != nil {
+		log.Fatalln("Failed to get zap.Logger", err)
+	}
+
+	logger = l.Sugar().With("application", "user-service", "package", "pkg/service")
+}
 
 // UserService service responsible for business logic related to users.
 type UserService interface {
@@ -38,6 +51,7 @@ func (svc *userSvc) SignUp(req models.SignupRequest) (models.LoginResponse, erro
 	user := req.User(credentials)
 	err = svc.userRepo.Save(user)
 	if err != nil {
+		logger.Errorw("Failed to save user", "err", err)
 		return models.LoginResponse{}, httputil.NewInternalServerError("Failed to save user")
 	}
 
@@ -52,13 +66,13 @@ func (svc *userSvc) createCredentials(req models.SignupRequest) (models.Credenti
 
 	salt, err := auth.GenSalt(svc.saltLength)
 	if err != nil {
-		// log error
+		logger.Errorw("Failed generate salt", "err", err)
 		return models.Credentials{}, httputil.NewInternalServerError("Failed to generate salt")
 	}
 
 	hash, err := svc.hasher.Hash(req.Password, salt)
 	if err != nil {
-		// log error
+		logger.Errorw("Failed generate hash", "err", err)
 		return models.Credentials{}, httputil.NewInternalServerError("Failed to hash password")
 	}
 
@@ -78,6 +92,7 @@ func (svc *userSvc) Login(req models.LoginRequest) (models.LoginResponse, error)
 
 	err = svc.hasher.Verify(req.Password, user.Credentials.Salt, user.Credentials.PasswordHash)
 	if err != nil {
+		logger.Errorw("Failed generate salt", "err", err)
 		return models.LoginResponse{}, errInvalidCredentials()
 	}
 
@@ -96,6 +111,7 @@ func (svc *userSvc) Find(id string) (models.User, error) {
 func (svc *userSvc) createLoginResponse(user models.User) (models.LoginResponse, error) {
 	token, err := svc.issuer.Issue(user.ID, user.Role)
 	if err != nil {
+		logger.Errorw("Failed issue token", "err", err)
 		return models.LoginResponse{}, httputil.NewInternalServerError("Failed to generate token")
 	}
 
