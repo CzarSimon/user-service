@@ -61,7 +61,7 @@ type LoginRequest struct {
 type ChangePasswordRequest struct {
 	ID             string `json:"id,omitempty"`
 	OldPassword    string `json:"oldPassword,omitempty"`
-	Password       string `json:"password,omitempty"`
+	NewPassword    string `json:"newPassword,omitempty"`
 	RepeatPassword string `json:"repeatPassword,omitempty"`
 }
 
@@ -70,13 +70,6 @@ type LoginResponse struct {
 	Token        string `json:"token,omitempty"`
 	RefreshToken string `json:"refreshToken,omitempty"`
 	User         User   `json:"user,omitempty"`
-}
-
-// ChangePasswordRequest request body for changing a user password.
-type ChangePasswordRequest struct {
-	Email       string `json:"email,omitempty"`
-	OldPassword string `json:"oldPassword,omitempty"`
-	NewPassword string `json:"newPassword,omitempty"`
 }
 
 // Credentials authentication information.
