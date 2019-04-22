@@ -57,6 +57,14 @@ type LoginRequest struct {
 	Password string `json:"password,omitempty"`
 }
 
+// ChangePasswordRequest request body for a request to change password.
+type ChangePasswordRequest struct {
+	ID             string `json:"id,omitempty"`
+	OldPassword    string `json:"oldPassword,omitempty"`
+	Password       string `json:"password,omitempty"`
+	RepeatPassword string `json:"repeatPassword,omitempty"`
+}
+
 // LoginResponse response for login and signup requests.
 type LoginResponse struct {
 	Token        string `json:"token,omitempty"`
