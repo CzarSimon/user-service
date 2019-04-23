@@ -59,7 +59,7 @@ type LoginRequest struct {
 
 // ChangePasswordRequest request body for a request to change password.
 type ChangePasswordRequest struct {
-	ID             string `json:"id,omitempty"`
+	UserID         string `json:"userId,omitempty"`
 	OldPassword    string `json:"oldPassword,omitempty"`
 	NewPassword    string `json:"newPassword,omitempty"`
 	RepeatPassword string `json:"repeatPassword,omitempty"`
