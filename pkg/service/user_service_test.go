@@ -284,6 +284,132 @@ func Test_userSvc_Login(t *testing.T) {
 	}
 }
 
+func Test_userSvc_ChangePassword(t *testing.T) {
+	userID := id.New()
+	user := models.User{
+		ID:                userID,
+		Email:             "mail@mail.com",
+		Surname:           "Tester",
+		MiddleAndLastName: "McTest",
+		Role:              models.AdminRole,
+		CreatedAt:         time.Now().UTC(),
+		Credentials: models.Credentials{
+			PasswordHash: "SCRYPT$32768$1$8$64$e741da717da8b684c6b512704e1dbcb999f38bf3b3ccf4729166b37da305e9770927c90ec6c6b1537d61a2a10d6a8295c23c46276e4d0e0019ed4c95fc238270",
+			Salt:         "94f61dca8108138e98580d174a6eec493b4be51ca748109862",
+		},
+	}
+	user.ID = id.New()
+
+	type fields struct {
+		userRepo *repotest.MockUserRepo
+	}
+	type args struct {
+		req models.ChangePasswordRequest
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    models.User
+		wantErr bool
+	}{
+		{
+			name: "happy-path",
+			fields: fields{
+				userRepo: &repotest.MockUserRepo{
+					FindUser: user,
+				},
+			},
+			args: args{
+				req: models.ChangePasswordRequest{
+					ID:             userID,
+					OldPassword:    "secret-drowssap",
+					NewPassword:    "secret-drowssap-2",
+					RepeatPassword: "secret-drowssap-2",
+				},
+			},
+			want:    user,
+			wantErr: false,
+		},
+		{
+			name: "sad-path-wrong-password",
+			fields: fields{
+				userRepo: &repotest.MockUserRepo{
+					FindUser: user,
+				},
+			},
+			args: args{
+				req: models.ChangePasswordRequest{
+					ID:             userID,
+					OldPassword:    "wrong-password",
+					NewPassword:    "secret-drowssap-2",
+					RepeatPassword: "secret-drowssap-2",
+				},
+			},
+			want:    models.User{},
+			wantErr: true,
+		},
+		{
+			name: "sad-path-no-such-user",
+			fields: fields{
+				userRepo: &repotest.MockUserRepo{
+					FindErr: repository.ErrNoSuchUser,
+				},
+			},
+			args: args{
+				req: models.ChangePasswordRequest{
+					ID:             id.New(),
+					OldPassword:    "secret-drowssap",
+					NewPassword:    "secret-drowssap-2",
+					RepeatPassword: "secret-drowssap-2",
+				},
+			},
+			want:    models.User{},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := &userSvc{
+				hasher:          hasher,
+				issuer:          issuer,
+				userRepo:        tt.fields.userRepo,
+				passwordChecker: &defaultChecker{minLength: 8},
+				saltLength:      25,
+			}
+			got, err := svc.ChangePassword(tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("userSvc.ChangePassword() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if tt.wantErr {
+				return
+			}
+
+			assert.NotEqual(t, "", got.Token)
+			// assert.NotEqual(t, "", got.RefreshToken)
+			assert.Equal(t, tt.want.ID, got.User.ID)
+			assert.Equal(t, tt.want.Email, got.User.Email)
+			assert.Equal(t, tt.want.Surname, got.User.Surname)
+			assert.Equal(t, tt.want.MiddleAndLastName, got.User.MiddleAndLastName)
+			assert.Equal(t, tt.want.Role, got.User.Role)
+			assert.Equal(t, tt.want.CreatedAt, got.User.CreatedAt)
+
+			savedUser := tt.fields.userRepo.UpdatePasswordArg
+			assert.NotEqual(t, tt.want.Credentials.PasswordHash, savedUser.Credentials.PasswordHash)
+			assert.NotEqual(t, tt.want.Credentials.Salt, savedUser.Credentials.Salt)
+			assert.Equal(t, tt.want.ID, savedUser.ID)
+
+			token, err := verifier.Verify(got.Token)
+			assert.NoError(t, err)
+			assert.Equal(t, got.User.ID, token.Subject)
+			assert.Equal(t, tt.want.Role, token.Role)
+			tt.fields.userRepo.UnsetArgs()
+		})
+	}
+}
+
 func Test_userSvc_Find(t *testing.T) {
 	user := models.User{
 		ID:                id.New(),

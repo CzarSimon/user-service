@@ -27,6 +27,7 @@ type UserService interface {
 	SignUp(req models.SignupRequest) (models.LoginResponse, error)
 	Login(req models.LoginRequest) (models.LoginResponse, error)
 	Find(id string) (models.User, error)
+	ChangePassword(req models.ChangePasswordRequest) (models.LoginResponse, error)
 }
 
 type userSvc struct {
@@ -43,7 +44,7 @@ func (svc *userSvc) SignUp(req models.SignupRequest) (models.LoginResponse, erro
 		return models.LoginResponse{}, errUserAlreadyExists()
 	}
 
-	credentials, err := svc.createCredentials(req)
+	credentials, err := svc.createCredentials(req.Password, req.RepeatPassword)
 	if err != nil {
 		return models.LoginResponse{}, err
 	}
@@ -58,8 +59,8 @@ func (svc *userSvc) SignUp(req models.SignupRequest) (models.LoginResponse, erro
 	return svc.createLoginResponse(user)
 }
 
-func (svc *userSvc) createCredentials(req models.SignupRequest) (models.Credentials, error) {
-	err := svc.passwordChecker.check(req.Password, req.RepeatPassword)
+func (svc *userSvc) createCredentials(password, repeatPassword string) (models.Credentials, error) {
+	err := svc.passwordChecker.check(password, repeatPassword)
 	if err != nil {
 		return models.Credentials{}, err
 	}
@@ -70,7 +71,7 @@ func (svc *userSvc) createCredentials(req models.SignupRequest) (models.Credenti
 		return models.Credentials{}, httputil.NewInternalServerError("Failed to generate salt")
 	}
 
-	hash, err := svc.hasher.Hash(req.Password, salt)
+	hash, err := svc.hasher.Hash(password, salt)
 	if err != nil {
 		logger.Errorw("Failed generate hash", "err", err)
 		return models.Credentials{}, httputil.NewInternalServerError("Failed to hash password")
@@ -87,12 +88,12 @@ func (svc *userSvc) Login(req models.LoginRequest) (models.LoginResponse, error)
 	if err == repository.ErrNoSuchUser {
 		return models.LoginResponse{}, errNoSuchUser()
 	} else if err != nil {
+		logger.Errorw("Failed find user by email", "err", err)
 		return models.LoginResponse{}, httputil.NewInternalServerError("Failed to get user")
 	}
 
 	err = svc.hasher.Verify(req.Password, user.Credentials.Salt, user.Credentials.PasswordHash)
 	if err != nil {
-		logger.Errorw("Failed generate salt", "err", err)
 		return models.LoginResponse{}, errInvalidCredentials()
 	}
 
@@ -101,11 +102,40 @@ func (svc *userSvc) Login(req models.LoginRequest) (models.LoginResponse, error)
 
 func (svc *userSvc) Find(id string) (models.User, error) {
 	user, err := svc.userRepo.Find(id)
-	if err != nil {
+	if err == repository.ErrNoSuchUser {
 		return models.User{}, httputil.NewError("No such user", http.StatusNotFound)
+	} else if err != nil {
+		logger.Errorw("Failed find user by id", "userId", id, "err", err)
+		return models.User{}, httputil.NewError("Failed to find user", http.StatusInternalServerError)
 	}
 
 	return user, nil
+}
+
+func (svc *userSvc) ChangePassword(req models.ChangePasswordRequest) (models.LoginResponse, error) {
+	user, err := svc.Find(req.ID)
+	if err != nil {
+		return models.LoginResponse{}, err
+	}
+
+	err = svc.hasher.Verify(req.OldPassword, user.Credentials.Salt, user.Credentials.PasswordHash)
+	if err != nil {
+		return models.LoginResponse{}, errInvalidCredentials()
+	}
+
+	credentials, err := svc.createCredentials(req.NewPassword, req.RepeatPassword)
+	if err != nil {
+		return models.LoginResponse{}, err
+	}
+
+	user.Credentials = credentials
+	err = svc.userRepo.UpdatePassword(user)
+	if err != nil {
+		logger.Errorw("Failed to update credentials", "userID", user.ID, "err", err)
+		return models.LoginResponse{}, httputil.NewInternalServerError("Failed to update password")
+	}
+
+	return svc.createLoginResponse(user)
 }
 
 func (svc *userSvc) createLoginResponse(user models.User) (models.LoginResponse, error) {

@@ -17,6 +17,8 @@ github.com/CzarSimon/user-service/pkg/models v0.0.0-20190414180801-c727ef98bd13 
 github.com/CzarSimon/user-service/pkg/models v0.0.0-20190414180801-c727ef98bd13/go.mod h1:muvR+DSvy/idZSLVX7yiZxZqO/tKh+in/a/sUZmV9nE=
 github.com/CzarSimon/user-service/pkg/models v0.0.0-20190414213512-6f2a7ae6afb1 h1:YMG+ALID/AawUeCsn2meOO9dLdhkvfI4xCu1YL0oMGk=
 github.com/CzarSimon/user-service/pkg/models v0.0.0-20190414213512-6f2a7ae6afb1/go.mod h1:muvR+DSvy/idZSLVX7yiZxZqO/tKh+in/a/sUZmV9nE=
+github.com/CzarSimon/user-service/pkg/models v0.0.0-20190422220805-88b62d6f6bb3 h1:wHkq8K4wPQnw0czh7qXJCGLuRYwUbQr+N/Ry0nM1YcY=
+github.com/CzarSimon/user-service/pkg/models v0.0.0-20190422220805-88b62d6f6bb3/go.mod h1:muvR+DSvy/idZSLVX7yiZxZqO/tKh+in/a/sUZmV9nE=
 github.com/CzarSimon/user-service/pkg/repository v0.0.0-20190414180801-c727ef98bd13 h1:2rPE7MxixdlUL9XEfVNI0W+0bzQZbnmf+oih9ILvcOc=
 github.com/CzarSimon/user-service/pkg/repository v0.0.0-20190414180801-c727ef98bd13/go.mod h1:mY6/xvyC7cSlh3u8hHeNC7Ro7ZyfsL8Febzq3wJTmmM=
 github.com/CzarSimon/user-service/pkg/repository v0.0.0-20190414213512-6f2a7ae6afb1 h1:skTauiBc6aS57T/FKKyWxIFlMaXfu2aClq6O5T9N2NU=
@@ -44,6 +46,8 @@ github.com/mattn/go-isatty v0.0.7 h1:UvyT9uN+3r7yLEYSlJsbQGdsaB/a0DlgWP3pql6iwOc
 github.com/mattn/go-isatty v0.0.7/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hdxcsrc5s=
 github.com/mimir-news/pkg v0.0.0-20190121200947-8a9f96ba3037 h1:l3l4nCMbLvS6CF+gnADzS2nn/d8tnuowrmsMWUWEz6I=
 github.com/mimir-news/pkg v0.0.0-20190121200947-8a9f96ba3037/go.mod h1:56VnezYq4JPmYiVRE/FKnjIFgCvIi4iYK3qX5As1zXM=
+github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
+github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/satori/go.uuid v1.2.0 h1:0uYX9dsZ2yD7q2RtLRtPSdGDWzjeM3TbMJP9utgA0ww=
