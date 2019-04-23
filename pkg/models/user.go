@@ -26,8 +26,14 @@ type User struct {
 
 // NewUser creates a new User.
 func NewUser(email, surname, lastName, role string, credentials Credentials) User {
+	userID := credentials.UserID
+	if userID == "" {
+		userID = id.New()
+		credentials.UserID = userID
+	}
+
 	return User{
-		ID:                id.New(),
+		ID:                userID,
 		Email:             email,
 		Surname:           surname,
 		MiddleAndLastName: lastName,

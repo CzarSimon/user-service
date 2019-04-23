@@ -8,6 +8,7 @@ import (
 	"github.com/CzarSimon/user-service/pkg/httputil"
 	"github.com/CzarSimon/user-service/pkg/models"
 	"github.com/CzarSimon/user-service/pkg/repository"
+	"github.com/mimir-news/pkg/id"
 	"go.uber.org/zap"
 )
 
@@ -44,7 +45,7 @@ func (svc *userSvc) SignUp(req models.SignupRequest) (models.LoginResponse, erro
 		return models.LoginResponse{}, errUserAlreadyExists()
 	}
 
-	credentials, err := svc.createCredentials(req.Password, req.RepeatPassword)
+	credentials, err := svc.createCredentials(id.New(), req.Password, req.RepeatPassword)
 	if err != nil {
 		return models.LoginResponse{}, err
 	}
@@ -59,7 +60,7 @@ func (svc *userSvc) SignUp(req models.SignupRequest) (models.LoginResponse, erro
 	return svc.createLoginResponse(user)
 }
 
-func (svc *userSvc) createCredentials(password, repeatPassword string) (models.Credentials, error) {
+func (svc *userSvc) createCredentials(userID, password, repeatPassword string) (models.Credentials, error) {
 	err := svc.passwordChecker.check(password, repeatPassword)
 	if err != nil {
 		return models.Credentials{}, err
@@ -78,6 +79,7 @@ func (svc *userSvc) createCredentials(password, repeatPassword string) (models.C
 	}
 
 	return models.Credentials{
+		UserID:       userID,
 		PasswordHash: hash,
 		Salt:         salt,
 	}, nil
@@ -113,7 +115,7 @@ func (svc *userSvc) Find(id string) (models.User, error) {
 }
 
 func (svc *userSvc) ChangePassword(req models.ChangePasswordRequest) (models.LoginResponse, error) {
-	user, err := svc.Find(req.ID)
+	user, err := svc.Find(req.UserID)
 	if err != nil {
 		return models.LoginResponse{}, err
 	}
@@ -123,13 +125,13 @@ func (svc *userSvc) ChangePassword(req models.ChangePasswordRequest) (models.Log
 		return models.LoginResponse{}, errInvalidCredentials()
 	}
 
-	credentials, err := svc.createCredentials(req.NewPassword, req.RepeatPassword)
+	credentials, err := svc.createCredentials(user.ID, req.NewPassword, req.RepeatPassword)
 	if err != nil {
 		return models.LoginResponse{}, err
 	}
 
 	user.Credentials = credentials
-	err = svc.userRepo.UpdatePassword(user)
+	err = svc.userRepo.UpdateCredentials(credentials)
 	if err != nil {
 		logger.Errorw("Failed to update credentials", "userID", user.ID, "err", err)
 		return models.LoginResponse{}, httputil.NewInternalServerError("Failed to update password")

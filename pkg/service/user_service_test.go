@@ -322,7 +322,7 @@ func Test_userSvc_ChangePassword(t *testing.T) {
 			},
 			args: args{
 				req: models.ChangePasswordRequest{
-					ID:             userID,
+					UserID:         userID,
 					OldPassword:    "secret-drowssap",
 					NewPassword:    "secret-drowssap-2",
 					RepeatPassword: "secret-drowssap-2",
@@ -340,7 +340,7 @@ func Test_userSvc_ChangePassword(t *testing.T) {
 			},
 			args: args{
 				req: models.ChangePasswordRequest{
-					ID:             userID,
+					UserID:         userID,
 					OldPassword:    "wrong-password",
 					NewPassword:    "secret-drowssap-2",
 					RepeatPassword: "secret-drowssap-2",
@@ -358,10 +358,28 @@ func Test_userSvc_ChangePassword(t *testing.T) {
 			},
 			args: args{
 				req: models.ChangePasswordRequest{
-					ID:             id.New(),
+					UserID:         id.New(),
 					OldPassword:    "secret-drowssap",
 					NewPassword:    "secret-drowssap-2",
 					RepeatPassword: "secret-drowssap-2",
+				},
+			},
+			want:    models.User{},
+			wantErr: true,
+		},
+		{
+			name: "sad-path-password-missmatch",
+			fields: fields{
+				userRepo: &repotest.MockUserRepo{
+					FindUser: user,
+				},
+			},
+			args: args{
+				req: models.ChangePasswordRequest{
+					UserID:         userID,
+					OldPassword:    "secret-drowssap",
+					NewPassword:    "secret-drowssap-2",
+					RepeatPassword: "secret-drowssap-3",
 				},
 			},
 			want:    models.User{},
@@ -396,10 +414,10 @@ func Test_userSvc_ChangePassword(t *testing.T) {
 			assert.Equal(t, tt.want.Role, got.User.Role)
 			assert.Equal(t, tt.want.CreatedAt, got.User.CreatedAt)
 
-			savedUser := tt.fields.userRepo.UpdatePasswordArg
-			assert.NotEqual(t, tt.want.Credentials.PasswordHash, savedUser.Credentials.PasswordHash)
-			assert.NotEqual(t, tt.want.Credentials.Salt, savedUser.Credentials.Salt)
-			assert.Equal(t, tt.want.ID, savedUser.ID)
+			savedCreds := tt.fields.userRepo.UpdateCredentialsArg
+			assert.NotEqual(t, tt.want.Credentials.PasswordHash, savedCreds.PasswordHash)
+			assert.NotEqual(t, tt.want.Credentials.Salt, savedCreds.Salt)
+			assert.Equal(t, tt.want.ID, savedCreds.UserID)
 
 			token, err := verifier.Verify(got.Token)
 			assert.NoError(t, err)
