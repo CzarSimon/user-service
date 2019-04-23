@@ -17,5 +17,5 @@ type UserRepository interface {
 	Find(id string) (models.User, error)
 	FindByEmail(email string) (models.User, error)
 	Save(user models.User) error
-	UpdatePassword(user models.User) error
+	UpdateCredentials(credentials models.Credentials) error
 }

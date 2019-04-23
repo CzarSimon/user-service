@@ -20,9 +20,9 @@ type MockUserRepo struct {
 	SaveArg         models.User
 	SaveInvocations int
 
-	UpdatePasswordErr         error
-	UpdatePasswordArg         models.User
-	UpdatePasswordInvocations int
+	UpdateCredentialsErr         error
+	UpdateCredentialsArg         models.Credentials
+	UpdateCredentialsInvocations int
 }
 
 // Find mock implementation of finding a user by id.
@@ -46,11 +46,11 @@ func (ur *MockUserRepo) Save(user models.User) error {
 	return ur.SaveErr
 }
 
-// UpdatePassword mock implementation of updating a users password.
-func (ur *MockUserRepo) UpdatePassword(user models.User) error {
-	ur.UpdatePasswordArg = user
-	ur.UpdatePasswordInvocations++
-	return ur.UpdatePasswordErr
+// UpdateCredentials mock implementation of updating a users authentication credentials.
+func (ur *MockUserRepo) UpdateCredentials(credentials models.Credentials) error {
+	ur.UpdateCredentialsArg = credentials
+	ur.UpdateCredentialsInvocations++
+	return ur.UpdateCredentialsErr
 }
 
 // UnsetArgs unsets all recoreded arguments and invocations.
@@ -58,7 +58,7 @@ func (ur *MockUserRepo) UnsetArgs() {
 	ur.FindInvocations = 0
 	ur.FindByEmailInvocations = 0
 	ur.SaveInvocations = 0
-	ur.UpdatePasswordInvocations = 0
+	ur.UpdateCredentialsInvocations = 0
 
 	ur.FindArg = ""
 	ur.FindByEmailArg = ""
