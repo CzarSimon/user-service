@@ -21,6 +21,8 @@ github.com/CzarSimon/user-service/pkg/models v0.0.0-20190422220805-88b62d6f6bb3 
 github.com/CzarSimon/user-service/pkg/models v0.0.0-20190422220805-88b62d6f6bb3/go.mod h1:muvR+DSvy/idZSLVX7yiZxZqO/tKh+in/a/sUZmV9nE=
 github.com/CzarSimon/user-service/pkg/models v0.0.0-20190423193538-97a479935a48 h1:b/hkQF6RKS3omWYscVumnpylQZtKSB291YMjSnazZv8=
 github.com/CzarSimon/user-service/pkg/models v0.0.0-20190423193538-97a479935a48/go.mod h1:muvR+DSvy/idZSLVX7yiZxZqO/tKh+in/a/sUZmV9nE=
+github.com/CzarSimon/user-service/pkg/models v0.0.0-20190423201041-96646a9231a8 h1:8RwnBAYWKfkuyyyAe7rgvzqgF0kMqoml+ZaW75H+LrE=
+github.com/CzarSimon/user-service/pkg/models v0.0.0-20190423201041-96646a9231a8/go.mod h1:lfSoxSfoTM2yRhC31+RZ9VLE982t8EBPtGDmFHocm0I=
 github.com/CzarSimon/user-service/pkg/repository v0.0.0-20190414180801-c727ef98bd13 h1:2rPE7MxixdlUL9XEfVNI0W+0bzQZbnmf+oih9ILvcOc=
 github.com/CzarSimon/user-service/pkg/repository v0.0.0-20190414180801-c727ef98bd13/go.mod h1:mY6/xvyC7cSlh3u8hHeNC7Ro7ZyfsL8Febzq3wJTmmM=
 github.com/CzarSimon/user-service/pkg/repository v0.0.0-20190414213512-6f2a7ae6afb1 h1:skTauiBc6aS57T/FKKyWxIFlMaXfu2aClq6O5T9N2NU=
